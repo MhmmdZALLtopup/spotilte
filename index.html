@@ -2,31 +2,75 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify - Rizal Ultimate Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spotify Pro - Rizal Ultimate Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#1DB954">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     
     <style>
         :root { --sp-green: #1DB954; }
-        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .app-container { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 1fr 90px; height: 100vh; display: none; }
-        @media (max-width: 768px) {
-            .app-container { grid-template-columns: 1fr; grid-template-rows: 1fr 140px; }
-            .sidebar { display: none; }
-            .mobile-nav { display: flex !important; }
-            .player-bar { height: 140px; flex-direction: column; padding: 10px; bottom: 60px; }
+        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; margin: 0; }
+        
+        /* Layout Dasar */
+        .app-container { 
+            display: grid; 
+            grid-template-columns: 280px 1fr; 
+            grid-template-rows: 1fr 90px; 
+            height: 100vh; 
+            display: none; 
         }
+
+        /* PERBAIKAN RESPONSIVE ANDROID */
+        @media (max-width: 768px) {
+            .app-container { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: 1fr 160px; 
+            }
+            .sidebar { display: none !important; }
+            .mobile-nav { display: flex !important; }
+            .search-mobile-container { display: block !important; }
+            
+            .player-bar { 
+                height: 100px; 
+                flex-direction: column; 
+                padding: 10px;
+                position: fixed;
+                bottom: 60px;
+                width: 100%;
+                background: #000;
+                border-top: 1px solid #282828;
+            }
+            
+            /* Thumbnail Seragam di Mobile */
+            .grid-music {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+                padding: 12px !important;
+            }
+        }
+
+        /* Sidebar Desktop */
         .sidebar { background-color: #000; border-right: 1px solid #282828; padding: 24px; display: flex; flex-direction: column; }
-        .main-view { background: linear-gradient(to bottom, #1e1e1e, #121212); overflow-y: auto; border-radius: 8px; margin: 8px 8px 0 0; }
+        .main-view { background: linear-gradient(to bottom, #1e1e1e, #121212); overflow-y: auto; overflow-x: hidden; }
+        
+        /* SEARCH BAR STYLING */
+        .search-mobile-container { display: none; padding: 15px; background: #121212; position: sticky; top: 0; z-index: 100; }
+        #suggestion-box { position: absolute; top: 100%; left: 15px; right: 15px; background: #282828; border-radius: 8px; z-index: 101; display: none; border: 1px solid #444; }
+        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #333; font-size: 13px; }
+
+        /* UNIFORM THUMBNAIL (DKV Standard) */
+        .spotify-card img { 
+            width: 100%; 
+            aspect-ratio: 1 / 1; /* Mengunci gambar jadi kotak sempurna */
+            object-fit: cover; /* Memastikan gambar terpotong rapi, tidak gepeng */
+            border-radius: 6px;
+            background: #282828;
+        }
+        
         .mobile-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.95); display: none; justify-content: space-around; align-items: center; border-top: 1px solid #282828; z-index: 1000; }
-        .spotify-card { background: #181818; padding: 16px; border-radius: 8px; transition: 0.3s; cursor: pointer; }
-        #suggestion-box { position: absolute; top: 100%; left: 0; width: 100%; background: #282828; border-radius: 8px; z-index: 100; display: none; border: 1px solid #333; }
         .player-bar { grid-column: span 2; background: #000; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 500; }
         input[type="range"] { accent-color: var(--sp-green); cursor: pointer; }
         #login-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -36,8 +80,8 @@
 <body>
 
     <div id="login-screen">
-        <i class="fab fa-spotify text-7xl text-[#1DB954] mb-8"></i>
-        <h1 class="text-3xl font-black italic mb-10 tracking-tighter">RIZAL<span class="text-[#1DB954]">MUSIC</span></h1>
+        <i class="fab fa-spotify text-7xl text-[#1DB954] mb-8 animate-pulse"></i>
+        <h1 class="text-3xl font-black italic mb-10 text-white">RIZAL<span class="text-[#1DB954]">MUSIC</span></h1>
         <button onclick="loginGoogle()" class="bg-[#1DB954] text-black font-bold px-10 py-4 rounded-full flex items-center gap-3 active:scale-95 transition shadow-2xl">
             <i class="fab fa-google"></i> LOGIN WITH GOOGLE
         </button>
@@ -51,46 +95,58 @@
             <nav class="flex flex-col gap-6 font-bold text-zinc-400">
                 <button onclick="goHome()" class="flex items-center gap-4 hover:text-white transition"><i class="fas fa-home text-2xl"></i> Home</button>
                 <div class="relative w-full">
-                    <i class="fas fa-search absolute left-3 top-3 text-zinc-500"></i>
-                    <input type="text" id="searchInput" placeholder="Search..." autocomplete="off" class="w-full bg-zinc-800 py-2.5 px-10 rounded-md text-xs outline-none focus:ring-1 focus:ring-green-500">
-                    <div id="suggestion-box"></div>
+                    <input type="text" id="searchDesktop" placeholder="Search..." class="w-full bg-zinc-800 py-2 px-4 rounded-md text-xs outline-none focus:ring-1 focus:ring-green-500">
                 </div>
-                <hr class="border-zinc-800">
                 <button onclick="showLibrary()" class="flex items-center gap-4 hover:text-white transition"><i class="fas fa-heart text-2xl text-red-500"></i> Liked Songs</button>
             </nav>
-            <div class="mt-auto pt-6 border-t border-zinc-800 flex items-center gap-3">
-                <img id="uImg" src="" class="w-10 h-10 rounded-full border border-zinc-700">
-                <div class="overflow-hidden"><p id="uName" class="text-xs font-bold truncate">User</p><button onclick="logout()" class="text-[10px] text-zinc-500 hover:text-red-500">Sign Out</button></div>
-            </div>
         </aside>
 
         <main class="main-view">
-            <header class="p-6 sticky top-0 bg-[#121212]/95 backdrop-blur-xl z-50 flex justify-between items-center">
+            <div class="search-mobile-container">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-zinc-500 text-sm"></i>
+                    <input type="text" id="searchMobile" placeholder="Cari lagu atau DJ..." 
+                        class="w-full bg-zinc-800 py-2.5 pl-10 pr-4 rounded-md text-xs outline-none border border-zinc-700 focus:border-green-500">
+                    <div id="suggestion-box"></div>
+                </div>
+            </div>
+
+            <header class="p-6 flex justify-between items-center">
                 <h2 id="viewTitle" class="text-xl md:text-3xl font-black">INDONESIA HITS</h2>
-                <div class="md:hidden"><img id="uImgMobile" src="" class="w-8 h-8 rounded-full"></div>
+                <div class="md:hidden"><img id="uImgMobile" src="" class="w-8 h-8 rounded-full border border-zinc-700"></div>
             </header>
-            <div class="p-4 md:p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8" id="musicGrid"></div>
+            
+            <div class="grid-music p-4 md:p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8" id="musicGrid"></div>
         </main>
 
         <footer class="player-bar">
-            <div class="flex items-center gap-3 w-full md:w-[30%]">
-                <img id="pArt" src="" class="w-12 h-12 rounded hidden object-cover shadow-lg">
-                <div class="overflow-hidden"><p id="pTitle" class="font-bold text-xs truncate">Pilih lagu...</p><p id="pArtist" class="text-[10px] text-zinc-500"></p></div>
-                <button id="likeBtn" class="ml-auto text-zinc-600 hover:text-red-500"><i class="fas fa-heart text-lg"></i></button>
-            </div>
-            <div class="flex flex-col items-center w-full md:w-[40%] gap-1">
-                <div class="flex items-center gap-6">
-                    <button onclick="playPrev()" class="text-zinc-400 hover:text-white"><i class="fas fa-step-backward text-xl"></i></button>
-                    <button id="playBtn" class="bg-white text-black w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-play ml-1"></i></button>
-                    <button onclick="playNext()" class="text-zinc-400 hover:text-white"><i class="fas fa-step-forward text-xl"></i></button>
+            <div class="flex items-center gap-3 w-full md:w-[30%] overflow-hidden">
+                <img id="pArt" src="" class="w-12 h-12 rounded hidden object-cover">
+                <div class="overflow-hidden flex-1">
+                    <p id="pTitle" class="font-bold text-[11px] md:text-sm truncate">Ready to play</p>
+                    <p id="pArtist" class="text-[9px] text-zinc-500 truncate"></p>
                 </div>
-                <input type="range" id="pBar" value="0" class="w-full">
+                <button id="likeBtn" class="text-zinc-600 px-2"><i class="fas fa-heart text-lg"></i></button>
+            </div>
+
+            <div class="flex flex-col items-center w-full md:w-[40%] gap-1">
+                <div class="flex items-center gap-8">
+                    <button onclick="playPrev()" class="text-zinc-400"><i class="fas fa-step-backward text-xl"></i></button>
+                    <button id="playBtn" class="bg-white text-black w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-play ml-1"></i></button>
+                    <button onclick="playNext()" class="text-zinc-400"><i class="fas fa-step-forward text-xl"></i></button>
+                </div>
+                <div class="flex items-center gap-3 w-full max-w-lg px-2">
+                    <span id="curT" class="text-[9px] text-zinc-500">0:00</span>
+                    <input type="range" id="pBar" value="0" class="flex-1 h-1">
+                    <span id="durT" class="text-[9px] text-zinc-500">0:00</span>
+                </div>
             </div>
         </footer>
 
         <nav class="mobile-nav">
-            <button onclick="goHome()" class="flex flex-col items-center text-zinc-400"><i class="fas fa-home text-lg"></i><span class="text-[9px]">Home</span></button>
-            <button onclick="showLibrary()" class="flex flex-col items-center text-zinc-400"><i class="fas fa-heart text-lg"></i><span class="text-[9px]">Library</span></button>
+            <button onclick="goHome()" class="flex flex-col items-center text-zinc-400"><i class="fas fa-home text-xl"></i><span class="text-[10px] mt-1">Home</span></button>
+            <button onclick="showLibrary()" class="flex flex-col items-center text-zinc-400"><i class="fas fa-heart text-xl"></i><span class="text-[10px] mt-1">Library</span></button>
+            <button onclick="logout()" class="flex flex-col items-center text-zinc-400"><i class="fas fa-sign-out-alt text-xl"></i><span class="text-[10px] mt-1">Exit</span></button>
         </nav>
     </div>
 
@@ -110,16 +166,17 @@
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).catch(e => alert("Error: " + e.message));
+            firebase.auth().signInWithPopup(provider).catch(e => alert(e.message));
         }
+
+        function logout() { firebase.auth().signOut(); location.reload(); }
 
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app').style.display = 'grid';
-                document.getElementById('uImg').src = user.photoURL;
                 document.getElementById('uImgMobile').src = user.photoURL;
-                document.getElementById('uName').innerText = user.displayName;
+                if(localStorage.getItem('rizal_liked')) library = JSON.parse(localStorage.getItem('rizal_liked'));
                 initYT();
             }
         });
@@ -133,18 +190,16 @@
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', {
                 height: '0', width: '0',
-                playerVars: { 'autoplay': 0, 'controls': 0, 'origin': window.location.origin },
+                playerVars: { 'autoplay': 0, 'controls': 0, 'origin': 'https://spotilte.vercel.app' },
                 events: { 'onReady': fetchHits, 'onStateChange': onState }
             });
         }
 
         async function fetchHits() {
-            try {
-                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&videoCategoryId=10&maxResults=20&regionCode=ID&key=${API_KEY}`);
-                const data = await res.json();
-                playlist = data.items;
-                render(playlist);
-            } catch (e) { console.error("API error: ", e); }
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&videoCategoryId=10&maxResults=20&regionCode=ID&key=${API_KEY}`);
+            const data = await res.json();
+            playlist = data.items;
+            render(playlist);
         }
 
         function render(items) {
@@ -152,8 +207,8 @@
             grid.innerHTML = '';
             items.forEach((item, i) => {
                 const card = document.createElement('div');
-                card.className = 'spotify-card';
-                card.innerHTML = `<img src="${item.snippet.thumbnails.medium.url}" class="w-full rounded mb-3"><h3 class="font-bold text-xs truncate">${item.snippet.title}</h3>`;
+                card.className = 'spotify-card group';
+                card.innerHTML = `<img src="${item.snippet.thumbnails.medium.url}"><h3 class="font-bold text-[10px] md:text-xs truncate mt-2 text-zinc-200">${item.snippet.title}</h3>`;
                 card.onclick = () => playThis(i, items);
                 grid.appendChild(card);
             });
@@ -170,11 +225,56 @@
             document.getElementById('pArtist').innerText = s.snippet.channelTitle;
         }
 
+        // SISTEM SEARCH AUTOCOMPLETE
+        const sug = ["DJ Slow Remix", "DJ Desa Terbaru", "DJ Tiktok Full Bass", "Hindia Rumah ke Rumah", "Tulus Hati Hati di Jalan"];
+        const sMobile = document.getElementById('searchMobile');
+        const sBox = document.getElementById('suggestion-box');
+
+        sMobile.oninput = () => {
+            const v = sMobile.value.toLowerCase();
+            sBox.innerHTML = '';
+            if(!v) { sBox.style.display='none'; return; }
+            const fil = sug.filter(x => x.toLowerCase().includes(v));
+            if(fil.length > 0) {
+                sBox.style.display='block';
+                fil.forEach(x => {
+                    const d = document.createElement('div');
+                    d.className = 'suggestion-item'; d.innerText = x;
+                    d.onclick = () => { sMobile.value=x; sBox.style.display='none'; doSearch(x); };
+                    sBox.appendChild(d);
+                });
+            } else sBox.style.display='none';
+        };
+
+        async function doSearch(q) {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${q}&type=video&key=${API_KEY}`);
+            const data = await res.json();
+            playlist = data.items;
+            document.getElementById('viewTitle').innerText = "Hasil: " + q;
+            render(playlist);
+        }
+
+        sMobile.onkeypress = (e) => { if(e.key==='Enter') doSearch(sMobile.value); };
+
         function onState(e) {
             document.getElementById('playBtn').innerHTML = (e.data == 1) ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play ml-1"></i>';
             if(e.data == 0) playNext();
+            if(e.data == 1) syncProg();
         }
 
+        function syncProg() {
+            if(player.getPlayerState() == 1) {
+                const c = player.getCurrentTime(), d = player.getDuration();
+                document.getElementById('pBar').value = (c/d)*100 || 0;
+                document.getElementById('curT').innerText = fmt(c);
+                document.getElementById('durT').innerText = fmt(d);
+                setTimeout(syncProg, 1000);
+            }
+        }
+        function fmt(s) { const m=Math.floor(s/60), sec=Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
+
+        function goHome() { document.getElementById('viewTitle').innerText="Indonesia Hits"; fetchHits(); }
+        function showLibrary() { document.getElementById('viewTitle').innerText="Liked Songs"; render(library); }
         function playNext() { if(curIdx < playlist.length-1) playThis(curIdx+1, playlist); }
         function playPrev() { if(curIdx > 0) playThis(curIdx-1, playlist); }
         document.getElementById('playBtn').onclick = () => player.getPlayerState()==1 ? player.pauseVideo() : player.playVideo();
