@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify - Rizal Pro Master Fix</title>
+    <title>Spotify Pro - Rizal Ultimate Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1DB954">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
@@ -13,49 +16,81 @@
     <style>
         :root { --sp-green: #1DB954; }
         body { background-color: #000; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .app-container { display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 1fr 90px; height: 100vh; display: none; }
+        
+        /* Responsive Layout */
+        .app-container { 
+            display: grid; 
+            grid-template-columns: 280px 1fr; 
+            grid-template-rows: 1fr 90px; 
+            height: 100vh; 
+            display: none; 
+        }
+
+        /* Penyesuaian Mobile (Android/HP) */
+        @media (max-width: 768px) {
+            .app-container { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: 1fr 140px; 
+            }
+            .sidebar { display: none; } /* Sembunyikan sidebar di HP */
+            .mobile-nav { display: flex !important; } /* Tampilkan navigasi bawah */
+            .player-bar { 
+                height: 140px; 
+                flex-direction: column; 
+                padding: 10px;
+                bottom: 60px; /* Di atas mobile nav */
+            }
+            .player-info { width: 100% !important; justify-content: center; }
+            .player-controls { width: 100% !important; }
+        }
+
         .sidebar { background-color: #000; border-right: 1px solid #282828; padding: 24px; display: flex; flex-direction: column; }
         .main-view { background: linear-gradient(to bottom, #1e1e1e, #121212); overflow-y: auto; border-radius: 8px; margin: 8px 8px 0 0; }
-        .spotify-card { background: #181818; padding: 16px; border-radius: 8px; transition: 0.3s; cursor: pointer; position: relative; }
-        .spotify-card:hover { background: #282828; transform: translateY(-5px); }
-        .play-float { position: absolute; right: 16px; bottom: 80px; width: 48px; height: 48px; background: var(--sp-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: translateY(10px); transition: 0.3s; color: black; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
-        .spotify-card:hover .play-float { opacity: 1; transform: translateY(0); }
-        #suggestion-box { position: absolute; top: 100%; left: 0; width: 100%; background: #282828; border-radius: 8px; display: none; z-index: 100; border: 1px solid #444; }
-        .suggestion-item { padding: 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #333; }
-        .suggestion-item:hover { color: var(--sp-green); background: #333; }
-        .player-bar { grid-column: span 2; background: #000; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
+        
+        /* Mobile Bottom Nav */
+        .mobile-nav { 
+            position: fixed; bottom: 0; width: 100%; height: 60px; 
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+            display: none; justify-content: space-around; align-items: center;
+            border-top: 1px solid #282828; z-index: 1000;
+        }
+
+        .spotify-card { background: #181818; padding: 12px; border-radius: 8px; transition: 0.3s; cursor: pointer; }
+        .spotify-card:hover { background: #282828; }
+        
+        #suggestion-box { position: absolute; top: 100%; left: 0; width: 100%; background: #282828; border-radius: 8px; z-index: 100; display: none; border: 1px solid #333; }
+        .suggestion-item { padding: 12px; cursor: pointer; font-size: 13px; }
+
+        .player-bar { grid-column: span 2; background: #000; border-top: 1px solid #282828; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 500; }
         input[type="range"] { accent-color: var(--sp-green); cursor: pointer; }
-        #login-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #yt-player-hidden { position: absolute; top: -1000px; left: -1000px; }
+        #login-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #yt-player { position: absolute; top: -1000px; left: -1000px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <i class="fab fa-spotify text-8xl text-[#1DB954] mb-8 animate-pulse"></i>
-        <h1 class="text-4xl font-black italic mb-10 tracking-tighter">RIZAL<span class="text-[#1DB954]">MUSIC</span></h1>
-        <button onclick="loginGoogle()" class="bg-[#1DB954] text-black font-extrabold px-12 py-4 rounded-full flex items-center gap-4 hover:scale-105 transition shadow-2xl">
-            <i class="fab fa-google text-2xl"></i> MASUK DENGAN GOOGLE
+        <i class="fab fa-spotify text-7xl text-[#1DB954] mb-8"></i>
+        <h1 class="text-3xl font-black italic mb-10 tracking-tighter text-white">RIZAL<span class="text-[#1DB954]">MUSIC</span></h1>
+        <button onclick="loginGoogle()" class="bg-[#1DB954] text-black font-bold px-10 py-4 rounded-full flex items-center gap-3 active:scale-95 transition shadow-2xl">
+            <i class="fab fa-google"></i> LOGIN WITH GOOGLE
         </button>
-        <p class="mt-8 text-zinc-500 text-[10px] font-bold tracking-[0.3em] uppercase">Project XI DKV</p>
     </div>
 
-    <div id="yt-player-hidden"><div id="player"></div></div>
+    <div id="yt-player"><div id="player"></div></div>
 
     <div class="app-container" id="app">
-        <aside class="sidebar flex flex-col gap-8">
-            <div class="flex items-center gap-3 px-2 text-2xl font-black italic"><i class="fab fa-spotify text-4xl text-[#1DB954]"></i> Spotify</div>
+        <aside class="sidebar">
+            <div class="flex items-center gap-3 mb-10 text-2xl font-black italic"><i class="fab fa-spotify text-3xl text-[#1DB954]"></i> Spotify</div>
             <nav class="flex flex-col gap-6 font-bold text-zinc-400">
                 <button onclick="goHome()" class="flex items-center gap-4 hover:text-white transition"><i class="fas fa-home text-2xl"></i> Home</button>
                 <div class="relative w-full">
                     <i class="fas fa-search absolute left-3 top-3 text-zinc-500"></i>
-                    <input type="text" id="searchInput" placeholder="Search DJ atau Lagu..." autocomplete="off"
-                        class="w-full bg-zinc-800 py-2.5 px-10 rounded-md text-xs outline-none focus:ring-1 focus:ring-green-500">
+                    <input type="text" id="searchInput" placeholder="Search..." autocomplete="off" class="w-full bg-zinc-800 py-2.5 px-10 rounded-md text-xs outline-none focus:ring-1 focus:ring-green-500">
                     <div id="suggestion-box"></div>
                 </div>
                 <hr class="border-zinc-800">
                 <button onclick="showLibrary()" class="flex items-center gap-4 hover:text-white transition"><i class="fas fa-heart text-2xl text-red-500"></i> Liked Songs</button>
-                <div id="libMenu" class="mt-2 flex flex-col gap-2 font-normal text-xs text-zinc-500 max-h-60 overflow-y-auto pr-2"></div>
             </nav>
             <div class="mt-auto pt-6 border-t border-zinc-800 flex items-center gap-3">
                 <img id="uImg" src="" class="w-10 h-10 rounded-full border border-zinc-700">
@@ -67,42 +102,55 @@
         </aside>
 
         <main class="main-view">
-            <header class="p-8 sticky top-0 bg-[#121212]/95 backdrop-blur-xl z-50 flex justify-between items-center">
-                <h2 id="viewTitle" class="text-4xl font-black">INDONESIA HITS</h2>
-                <span class="text-[10px] font-bold bg-white/10 px-3 py-1 rounded-full uppercase">Verified User</span>
+            <header class="p-6 sticky top-0 bg-[#121212]/95 backdrop-blur-xl z-50 flex justify-between items-center">
+                <h2 id="viewTitle" class="text-xl md:text-3xl font-black">INDONESIA HITS</h2>
+                <div class="md:hidden">
+                    <img id="uImgMobile" src="" class="w-8 h-8 rounded-full">
+                </div>
             </header>
-            <div class="p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8" id="musicGrid"></div>
+            <div class="p-4 md:p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-8" id="musicGrid"></div>
         </main>
 
         <footer class="player-bar">
-            <div class="flex items-center gap-4 w-[30%]">
-                <img id="pArt" src="" class="w-14 h-14 rounded hidden object-cover shadow-2xl border border-zinc-800">
-                <div class="overflow-hidden">
-                    <p id="pTitle" class="font-bold text-sm truncate">Ready to play</p>
-                    <p id="pArtist" class="text-[11px] text-zinc-500 truncate font-medium"></p>
+            <div class="player-info flex items-center gap-3 w-full md:w-[30%]">
+                <img id="pArt" src="" class="w-12 h-12 md:w-14 md:h-14 rounded hidden object-cover shadow-lg">
+                <div class="overflow-hidden max-w-[150px] md:max-w-full">
+                    <p id="pTitle" class="font-bold text-xs md:text-sm truncate">Pilih lagu...</p>
+                    <p id="pArtist" class="text-[10px] text-zinc-500 truncate"></p>
                 </div>
-                <button id="likeBtn" class="ml-4 text-zinc-600 hover:text-red-500 transition"><i class="fas fa-heart text-xl"></i></button>
+                <button id="likeBtn" class="ml-auto md:ml-4 text-zinc-600 hover:text-red-500"><i class="fas fa-heart text-lg"></i></button>
             </div>
-            <div class="flex flex-col items-center w-[40%] gap-2">
-                <div class="flex items-center gap-8">
-                    <button onclick="playPrev()" class="text-zinc-400 hover:text-white text-xl"><i class="fas fa-step-backward"></i></button>
-                    <button id="playBtn" class="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 active:scale-90 shadow-lg"><i class="fas fa-play ml-1"></i></button>
-                    <button onclick="playNext()" class="text-zinc-400 hover:text-white text-xl"><i class="fas fa-step-forward"></i></button>
+
+            <div class="player-controls flex flex-col items-center w-full md:w-[40%] gap-1">
+                <div class="flex items-center gap-6">
+                    <button onclick="playPrev()" class="text-zinc-400 hover:text-white"><i class="fas fa-step-backward text-xl"></i></button>
+                    <button id="playBtn" class="bg-white text-black w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-play ml-1"></i></button>
+                    <button onclick="playNext()" class="text-zinc-400 hover:text-white"><i class="fas fa-step-forward text-xl"></i></button>
                 </div>
-                <div class="flex items-center gap-3 w-full">
-                    <span id="curT" class="text-[10px] text-zinc-500">0:00</span>
-                    <input type="range" id="pBar" value="0" class="flex-1">
-                    <span id="durT" class="text-[10px] text-zinc-500">0:00</span>
+                <div class="flex items-center gap-3 w-full max-w-lg">
+                    <span id="curT" class="text-[9px] text-zinc-500 font-mono">0:00</span>
+                    <input type="range" id="pBar" value="0" class="flex-1 h-1">
+                    <span id="durT" class="text-[9px] text-zinc-500 font-mono">0:00</span>
                 </div>
             </div>
-            <div class="w-[30%] flex justify-end items-center gap-3 hidden md:flex"><i class="fas fa-volume-up text-zinc-500"></i><input type="range" id="vBar" value="100" class="w-24"></div>
+
+            <div class="w-[30%] hidden md:flex justify-end items-center gap-3">
+                <i class="fas fa-volume-up text-zinc-500 text-xs"></i>
+                <input type="range" id="vBar" value="100" class="w-24">
+            </div>
         </footer>
+
+        <nav class="mobile-nav">
+            <button onclick="goHome()" class="flex flex-col items-center text-zinc-400 hover:text-white"><i class="fas fa-home text-lg"></i><span class="text-[9px] mt-1">Home</span></button>
+            <button onclick="focusSearch()" class="flex flex-col items-center text-zinc-400 hover:text-white"><i class="fas fa-search text-lg"></i><span class="text-[9px] mt-1">Search</span></button>
+            <button onclick="showLibrary()" class="flex flex-col items-center text-zinc-400 hover:text-white"><i class="fas fa-heart text-lg"></i><span class="text-[9px] mt-1">Library</span></button>
+        </nav>
     </div>
 
     <script>
-        // DATA FIREBASE
+        // FIREBASE RIZAL
         const firebaseConfig = {
-            apiKey: "AIzaSyCOsJ3yJxnZah3JPx78Lu3PG0ujQd0rtlo",
+            apiKey: "AIzaSyCOsJ3yJxnZah3JPx78Lu3PG0uj (KUNCI FIREBASE KAMU)",
             authDomain: "spotify-tets.firebaseapp.com",
             projectId: "spotify-tets",
             storageBucket: "spotify-tets.firebasestorage.app",
@@ -114,11 +162,11 @@
         const API_KEY = 'AIzaSyBnWUujaOpbEd2BveLvUMWEglcbxs-TLFc';
         let player, playlist = [], library = [], curIdx = -1;
 
-        // AUTH SYSTEM
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).catch(e => alert("Cek Authorized Domain!"));
+            firebase.auth().signInWithPopup(provider).catch(e => alert("Pastikan domain onecompiler.com sudah di-authorized di Firebase!"));
         }
+
         function logout() { firebase.auth().signOut(); location.reload(); }
 
         firebase.auth().onAuthStateChanged(user => {
@@ -126,16 +174,13 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app').style.display = 'grid';
                 document.getElementById('uImg').src = user.photoURL;
+                document.getElementById('uImgMobile').src = user.photoURL;
                 document.getElementById('uName').innerText = user.displayName;
-                if(localStorage.getItem('rizal_liked')) {
-                    library = JSON.parse(localStorage.getItem('rizal_liked'));
-                    updateLibraryUI();
-                }
+                if(localStorage.getItem('rizal_liked')) library = JSON.parse(localStorage.getItem('rizal_liked'));
                 initYT();
             }
         });
 
-        // YT ENGINE
         function initYT() {
             const tag = document.createElement('script');
             tag.src = "https://www.youtube.com/iframe_api";
@@ -164,31 +209,32 @@
                 const card = document.createElement('div');
                 card.className = 'spotify-card group';
                 card.innerHTML = `
-                    <div class="relative mb-4">
-                        <img src="${item.snippet.thumbnails.medium.url}" class="w-full aspect-square object-cover rounded shadow-lg">
-                        <div class="play-float"><i class="fas fa-play"></i></div>
-                    </div>
-                    <h3 class="font-bold text-xs truncate">${item.snippet.title}</h3>
+                    <div class="relative mb-3"><img src="${item.snippet.thumbnails.medium.url}" class="w-full aspect-square object-cover rounded shadow-lg"></div>
+                    <h3 class="font-bold text-[10px] md:text-xs truncate">${item.snippet.title}</h3>
                 `;
                 card.onclick = () => playThis(i, items);
                 grid.appendChild(card);
             });
         }
 
-        // FIX PLAY & LIKE ID
         function playThis(idx, listSource) {
-            playlist = listSource;
-            curIdx = idx;
+            playlist = listSource; curIdx = idx;
             const s = playlist[idx];
-            // Deteksi ID (bisa string atau objek)
             const vidId = (typeof s.id === 'string') ? s.id : s.id.videoId;
-            
             player.loadVideoById(vidId);
+            
+            // Background Play Metadata
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: s.snippet.title, artist: s.snippet.channelTitle,
+                    artwork: [{ src: s.snippet.thumbnails.high.url, sizes: '512x512', type: 'image/png' }]
+                });
+            }
+
             document.getElementById('pArt').src = s.snippet.thumbnails.medium.url;
             document.getElementById('pArt').classList.remove('hidden');
             document.getElementById('pTitle').innerText = s.snippet.title;
             document.getElementById('pArtist').innerText = s.snippet.channelTitle;
-            updateLikeIcon(vidId);
         }
 
         function onState(e) {
@@ -208,69 +254,14 @@
         }
         function fmt(s) { const m=Math.floor(s/60), sec=Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
 
-        // LIKE SYSTEM FIX
-        document.getElementById('likeBtn').onclick = () => {
-            const s = playlist[curIdx];
-            const id = (typeof s.id === 'string') ? s.id : s.id.videoId;
-            const fIdx = library.findIndex(item => (typeof item.id === 'string' ? item.id : item.id.videoId) === id);
-            
-            if(fIdx === -1) library.push(s);
-            else library.splice(fIdx, 1);
-            
-            localStorage.setItem('rizal_liked', JSON.stringify(library));
-            updateLibraryUI();
-            updateLikeIcon(id);
-        };
-
-        function updateLibraryUI() {
-            document.getElementById('libMenu').innerHTML = library.map((s, i) => `
-                <div onclick="playThis(${i}, library)" class="cursor-pointer hover:text-white truncate py-1 text-[11px]">
-                    <i class="fas fa-music mr-2 opacity-50"></i> ${s.snippet.title}
-                </div>
-            `).join('');
-        }
-
-        function updateLikeIcon(id) {
-            const exists = library.find(item => (typeof item.id === 'string' ? item.id : item.id.videoId) === id);
-            document.getElementById('likeBtn').className = exists ? 'ml-4 text-red-500' : 'ml-4 text-zinc-600 hover:text-red-500';
-        }
-
-        // SEARCH & AUTOCOMPLETE
-        const sug = ["DJ Slow Remix", "DJ Desa", "DJ Tiktok Viral", "Tulus", "Hindia"];
-        const sIn = document.getElementById('searchInput');
-        const sBox = document.getElementById('suggestion-box');
-
-        sIn.oninput = () => {
-            const v = sIn.value.toLowerCase();
-            sBox.innerHTML = '';
-            if(!v) { sBox.style.display='none'; return; }
-            const fil = sug.filter(x => x.toLowerCase().includes(v));
-            if(fil.length > 0) {
-                sBox.style.display='block';
-                fil.forEach(x => {
-                    const d = document.createElement('div');
-                    d.className = 'suggestion-item'; d.innerText = x;
-                    d.onclick = () => { sIn.value=x; sBox.style.display='none'; search(x); };
-                    sBox.appendChild(d);
-                });
-            } else sBox.style.display='none';
-        };
-
-        async function search(q) {
-            const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=${q}&type=video&key=${API_KEY}`);
-            const data = await res.json();
-            playlist = data.items;
-            document.getElementById('viewTitle').innerText = "SEARCH: " + q.toUpperCase();
-            render(playlist);
-        }
-
+        // NAVIGATION MOBILE & SEARCH
+        function focusSearch() { document.getElementById('searchInput').focus(); }
         function goHome() { document.getElementById('viewTitle').innerText="INDONESIA HITS"; fetchHits(); }
         function showLibrary() { document.getElementById('viewTitle').innerText="LIKED SONGS"; render(library); }
         function playNext() { if(curIdx < playlist.length-1) playThis(curIdx+1, playlist); }
         function playPrev() { if(curIdx > 0) playThis(curIdx-1, playlist); }
         document.getElementById('playBtn').onclick = () => player.getPlayerState()==1 ? player.pauseVideo() : player.playVideo();
         document.getElementById('vBar').oninput = (e) => player.setVolume(e.target.value);
-        sIn.onkeypress = (e) => { if(e.key==='Enter') search(sIn.value); };
     </script>
 </body>
 </html>
